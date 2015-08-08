@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>three.js</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+	<script src="js/OrbitControls.js"></script>
+</head>
+<body>
+<div id="stage">
+	<script>
+	var scene = new THREE.Scene();
+	var width = 500;
+	var height = 300;
+
+	
+	var geometry = new THREE.BoxGeometry(50, 50, 50);
+	var material = new THREE.MeshFaceMaterial(materials);
+	
+	var cube = new Array(27);
+	var cube_Mesh = new Array(27);
+	var colors = [0xff0000, 0xffff00, 0x00ffff, 0x0000ff, 0x00ff00, 0x000000]; 
+	
+	var turn = 0;
+	var marked = [];
+	for(var i =0; i < cube_Mesh.length;i++){
+		marked[i] = new Array(6);
+			for(var j = 0;j < 6;j++){
+				marked[i][j] = 0;
+				console.log(i);
+				console.log(marked[i][j]);
+			}
+	}
+
+	for(var i = 0; i < cube_Mesh.length; i++){
+
+		var materials = [];
+		for (var k = 0; k < 6; k++){
+			materials.push(new THREE.MeshBasicMaterial({
+				map:THREE.ImageUtils.loadTexture(
+					'images/' + ( k + 1 ) + '.jpg' , {} , function() { render.render( scene, camera ); }
+				)}));
+		}
+		cube_Mesh[i] = materials;
+	}
+	
+	for(var i = 0; i < cube.length; i++){
+		var geometry = new THREE.BoxGeometry(50,50,50);
+		var material = new THREE.MeshFaceMaterial(cube_Mesh[i]);
+		cube[i] = new THREE.Mesh(geometry, material);
+	}
+
+	var num = 0;
+
+	for(var i = 0; i < 3; i++){
+		for(var k = 0; k < 3; k++){
+			for(var m = 0; m < 3; m++){
+				cube[num++].position.set(m*50,k*50,i*50);
+			}
+		}
+	}
+
+	for(var i = 0; i < cube.length; i++){
+		if (i != 13){
+			scene.add(cube[i]);
+		}
+	}
+
+	var light = new THREE.DirectionalLight(0xffffff, 1);
+	light.position.set(0, 100, 30);
+	scene.add(light);
+
+	var ambient = new THREE.AmbientLight(0x550000);
+	scene.add(ambient);
+
+	var camera = new THREE.PerspectiveCamera(45, width / height , 1, 1000);
+	camera.position.set(200,200,500);
+
+	var render = new THREE.WebGLRenderer();
+	render.setSize(width, height);
+	render.setClearColor(0xeeeeee, 1);
+	document.getElementById('stage').appendChild(render.domElement);
+	
+	var controls = new THREE.OrbitControls(camera, render.domElement);
+
+	//mouse、raycaster
+	var mouse = new THREE.Vector2(); 
+	var raycaster = new THREE.Raycaster();
+	
+	//衝突イベント(クリックイベント)
+	window.onmousedown = function (event){
+		if (event.target == render.domElement) {
+
+			mouse.x = (event.clientX / render.domElement.width) * 2 -1;
+			mouse.y = - (event.clientY / render.domElement.height) * 2 +1;
+			raycaster.setFromCamera(mouse, camera);
+
+			var intersects = raycaster.intersectObjects( scene.children);
+			//console.log(intersects);
+			//console.log(intersects[0]);
+			if (intersects.length > 0) { 	// 何かにぶつかった
+			
+			console.log(Math.floor(intersects[0].faceIndex/2));
+			
+			var position_x = intersects[0].object.position.x / 50;
+			var position_y = intersects[0].object.position.y / 50 * 3;
+			var position_z = intersects[0].object.position.z / 50 * 9;
+			var cube_position = position_x + position_y + position_z;
+
+			if(turn == 0 && marked[cube_position][Math.floor(intersects[0].faceIndex/2)] == 0){
+			
+				cube_Mesh[cube_position][Math.floor(intersects[0].faceIndex/2)] = new THREE.MeshBasicMaterial({
+			
+					map:THREE.ImageUtils.loadTexture(		
+						'images/maru.jpg' , {} , function() { render.render( scene, camera ); }
+					)
+				
+				});
+					
+				marked[cube_position][Math.floor(intersects[0].faceIndex/2)] = 1;
+				
+				turn = 1;
+					
+			}else if(turn == 1 && marked[cube_position][Math.floor(intersects[0].faceIndex/2)] == 0){
+					
+				cube_Mesh[cube_position][Math.floor(intersects[0].faceIndex/2)] = new THREE.MeshBasicMaterial({
+				
+				map:THREE.ImageUtils.loadTexture(
+					'images/batsu.jpg' , {} , function() { render.render( scene, camera ); }
+					)
+				
+				});
+					
+				marked[cube_position][Math.floor(intersects[0].faceIndex/2)] = 1;
+				
+				turn = 0;
+			}
+
+			}
+		}
+	}
+	
+
+	function ren() {
+		requestAnimationFrame(ren);
+		render.render(scene, camera);
+		controls.update();
+	}
+	ren();
+	
+	</script>
+</div>
+</body>
+</html>
